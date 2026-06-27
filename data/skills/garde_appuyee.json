@@ -1,0 +1,9 @@
+{
+  "id": "skl_garde_appuyee",
+  "display_name": "Garde Appuyée",
+  "description": "Frappe renforcée qui consomme de l'énergie pour de plus gros dégâts.",
+  "resource_cost": { "type": "mana", "amount": 6 },
+  "target": "enemy",
+  "effect_type": "damage",
+  "power": 22
+}

@@ -1,0 +1,8 @@
+{
+  "id": "itm_potion_seve",
+  "display_name": "Potion de Sève",
+  "description": "Restaure des points de vie.",
+  "slot": "consumable",
+  "on_use": { "effect_type": "heal", "power": 20 },
+  "stackable": true
+}

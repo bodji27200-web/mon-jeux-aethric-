@@ -1,0 +1,9 @@
+{
+  "id": "skl_frappe",
+  "display_name": "Frappe",
+  "description": "Une attaque physique de base.",
+  "resource_cost": { "type": "mana", "amount": 0 },
+  "target": "enemy",
+  "effect_type": "damage",
+  "power": 10
+}

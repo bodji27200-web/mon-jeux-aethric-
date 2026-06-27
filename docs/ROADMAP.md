@@ -1,44 +1,82 @@
-# Roadmap — développement par lots
+# Roadmap — développement par lots (1 → 40)
 
-> Règle absolue : **un lot à la fois**, validé sur iPhone 13 Safari avant le suivant.
-> Cette roadmap décrit des *catégories de systèmes originaux*. Tous les noms/données concrets
-> seront inventés dans le projet, jamais copiés d'une œuvre existante.
+> Règle absolue : **un lot à la fois**, chaque lot autonome, testable, validé.
+> Cette roadmap décrit des **catégories de systèmes originaux**. Tous les noms, descriptions et
+> chiffres concrets sont **inventés pour ce projet** — aucune copie d'une œuvre existante.
+> Plateforme cible : **Web mobile, iPhone 13 Safari**, Godot 4.7, GDScript, renderer Compatibility.
 
-## Lot 0 — Rails (EN COURS / ce commit)
-- [x] `CLAUDE.md` (règles, méthode, contraintes).
-- [x] `docs/ARCHITECTURE.md`.
-- [x] `docs/ROADMAP.md`.
-- [x] `docs/DATA_SCHEMAS.md` (schémas data-driven).
-- [ ] Aucun système de jeu codé. (Volontaire.)
+Légende : ✅ fait · 🚧 en cours · ⬜ à faire
 
-## Lot 1 — Boucle minimale jouable (PROCHAIN)
-Objectif : une tranche complète de bout en bout.
-- Projet Godot 4.7 configuré (Compatibility, viewport 720×1280, autoloads de base).
-- Écran de lancement → une petite zone d'exploration.
-- Déplacement **tactile** (joystick virtuel ou tap-to-move).
-- Une rencontre déclenchée par un monstre.
-- Combat **tour par tour** minimal (1 héros vs 1 monstre, attaque + une compétence).
-- Victoire → **loot** simple (1 objet via table de butin).
-- **Sauvegarde** versionnée + rechargement.
-- **Export Web** testé sur iPhone 13.
+---
 
-## Lot 2 — Profondeur du combat
-- Plusieurs compétences/sorts data-driven, coûts (mana/énergie), effets de statut.
-- Ordre de tour basé sur une stat (vitesse), file d'actions.
-- Plusieurs ennemis.
+## Phase A — Fondations & boucle de jeu (lots 1–8)
 
-## Lot 3 — Classes & progression
-- Système de **classes évolutives** (montée de niveau, déblocage de compétences).
-- Stats dérivées de données par classe.
+- ✅ **Lot 1 — Boucle minimale jouable.** Projet Godot configuré (Compatibility, 720×1280, autoloads).
+  Écran de lancement → petite zone → déplacement tactile → rencontre → combat 1v1 tour par tour →
+  victoire → loot simple → sauvegarde versionnée → rechargement. Export Web. 18 tests OK.
+- ✅ **Lot 2 — Pipeline d'export Web + lien jouable.** GitHub Actions exporte le build HTML5 et le
+  publie sur GitHub Pages à chaque push sur main. Lien jouable persistant.
+- ⬜ **Lot 3 — Profondeur du combat.** Plusieurs actions, coût de ressource (mana/énergie), file de
+  tours basée sur la vitesse, plusieurs ennemis.
+- ⬜ **Lot 4 — Effets de statut.** Buffs/debuffs, poison/brûlure/etc. (effets génériques data-driven),
+  durée, résolution en fin de tour.
+- ⬜ **Lot 5 — Classes & progression.** Classes jouables data-driven, montée de niveau, courbe d'XP,
+  déblocage de compétences par palier.
+- ⬜ **Lot 6 — Stats & formules.** Stats dérivées (attaque/défense/crit/esquive), formule de dégâts
+  centralisée et testée, RNG déterministe pour les tests.
+- ⬜ **Lot 7 — Inventaire & équipement.** Slots d'équipement, modificateurs de stats, UI inventaire
+  mobile, objets consommables en combat.
+- ⬜ **Lot 8 — Sauvegarde robuste & migrations.** Plusieurs slots, migration de version, gestion des
+  saves corrompues, sauvegarde auto.
 
-## Lot 4 — Équipement & inventaire
-- Objets équipables modifiant les stats ; UI d'inventaire mobile.
+## Phase B — Contenu & monde (lots 9–18)
 
-## Lot 5 — Zones & donjons
-- Plusieurs zones, transitions, un donjon simple avec progression.
+- ⬜ **Lot 9 — Système de zones.** Plusieurs zones reliées, transitions, points d'intérêt, retour ville.
+- ⬜ **Lot 10 — Tables de rencontre & spawns.** Rencontres pondérées par zone, niveaux d'ennemis.
+- ⬜ **Lot 11 — Bestiaire.** Catalogue de monstres data-driven, familles d'ennemis, résistances.
+- ⬜ **Lot 12 — Boss.** Combats de boss avec phases et mécaniques scriptées par données.
+- ⬜ **Lot 13 — Donjons.** Donjons modulaires (salles enchaînées), progression, récompense de fin.
+- ⬜ **Lot 14 — Loot avancé.** Raretés, affixes/modificateurs aléatoires sur objets, tables par source.
+- ⬜ **Lot 15 — Boutique & économie.** Monnaie, marchands, achat/vente, prix data-driven.
+- ⬜ **Lot 16 — Ville / base du joueur.** Hub central, PNJ de services (forge, soin, stockage).
+- ⬜ **Lot 17 — Quêtes.** Système de quêtes data-driven (objectifs, suivi, récompenses, journal).
+- ⬜ **Lot 18 — Dialogues.** Moteur de dialogues à choix, conditions, drapeaux de progression.
 
-## Lots ultérieurs (à préciser, non engagés)
-- Familiers/compagnons, ville/base, quêtes, économie. Décidés un par un, jamais anticipés en code.
+## Phase C — Systèmes RPG avancés (lots 19–28)
 
-## Hors périmètre pour l'instant
-Multijoueur, raids, serveur, monde ouvert. À rediscuter explicitement plus tard.
+- ⬜ **Lot 19 — Arbre de compétences / talents.** Progression de spécialisation par classe.
+- ⬜ **Lot 20 — Familiers / compagnons.** Créatures persistantes recrutables, leur propre progression.
+- ⬜ **Lot 21 — Combat avec familiers.** Intégration des compagnons en combat, IA d'allié simple.
+- ⬜ **Lot 22 — Artisanat / forge.** Recettes, ressources, amélioration d'équipement.
+- ⬜ **Lot 23 — Collecte & ressources.** Récolte dans les zones, nœuds de ressources.
+- ⬜ **Lot 24 — Enchantements / gemmes.** Améliorations modulaires d'équipement.
+- ⬜ **Lot 25 — Multi-classe / reclassement.** Changement/combinaison de classes, règles d'équilibrage.
+- ⬜ **Lot 26 — Statut élémentaire & affinités.** Système d'éléments (faiblesses/résistances) original.
+- ⬜ **Lot 27 — Compétences passives & auras.** Effets permanents data-driven.
+- ⬜ **Lot 28 — Équilibrage & courbes.** Outils internes d'équilibrage, tableurs de stats générés.
+
+## Phase D — Contenu de fin de jeu & rejouabilité (lots 29–34)
+
+- ⬜ **Lot 29 — Donjons à étages / sans fin.** Difficulté croissante, récompenses paliers.
+- ⬜ **Lot 30 — Évènements aléatoires.** Rencontres et évènements de zone procéduraux.
+- ⬜ **Lot 31 — Défis quotidiens / objectifs.** Tâches répétables, récompenses.
+- ⬜ **Lot 32 — Collections / succès.** Bestiaire complété, succès, récompenses de complétion.
+- ⬜ **Lot 33 — Modes de difficulté.** Réglages de difficulté, new game+.
+- ⬜ **Lot 34 — Génération procédurale de zones.** Zones modulaires assemblées aléatoirement.
+
+## Phase E — Finition, UX mobile & robustesse (lots 35–40)
+
+- ⬜ **Lot 35 — UX mobile.** Réglages tactiles, tailles de cibles, retours haptiques/visuels, options.
+- ⬜ **Lot 36 — Audio.** Bus audio, musiques/SFX originaux, mixage, réglages volume.
+- ⬜ **Lot 37 — Performance mobile.** Profilage iPhone 13, budgets de nodes/draw calls, optimisations.
+- ⬜ **Lot 38 — Localisation.** Système i18n (FR/EN), extraction des chaînes.
+- ⬜ **Lot 39 — Tutoriel & onboarding.** Première partie guidée, infobulles.
+- ⬜ **Lot 40 — Polissage & build de démo.** Écrans titre/crédits, équilibrage final, build Web stable.
+
+---
+
+## Hors périmètre (à rediscuter explicitement, non engagé)
+Multijoueur temps réel, serveur de jeu, raids en ligne, monde ouvert unique chargé d'un bloc.
+
+## Statut courant
+Lot 0 (rails) ✅ — Lot 1 🚧 en cours.

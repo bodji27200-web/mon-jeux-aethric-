@@ -88,3 +88,6 @@ victoire → loot → sauvegarde → retour dans la zone → export Web jouable 
 | Date | Décision | Raison |
 |------|----------|--------|
 | 2026-06-27 | Création des rails du projet (CLAUDE.md + docs d'architecture). Aucun code de jeu. | Poser les fondations avant tout développement. |
+| 2026-06-27 | Lot 1 : boucle minimale jouable (Godot 4.7, autoloads data-driven, combat tour par tour, loot, sauvegarde versionnée). 18 tests headless OK + export Web OK. | Première tranche complète de bout en bout. |
+| 2026-06-27 | Données concrètes en JSON (data/) plutôt qu'en .tres pour le lot 1. | Simplicité, chargement headless, pas de dépendance à l'éditeur. |
+| 2026-06-27 | Lot 2 : CI GitHub Actions exporte le Web et déploie sur GitHub Pages à chaque push sur main. | Lien jouable persistant et à jour automatiquement. |
