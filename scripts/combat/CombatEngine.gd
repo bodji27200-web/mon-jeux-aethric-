@@ -1,20 +1,25 @@
 class_name CombatEngine
 extends RefCounted
-## Moteur de combat tour par tour, sans dépendance à l'UI (donc testable en headless).
-## Lot 1 : 1 héros contre 1 monstre. Le héros agit, puis le monstre.
+## Combat tour par tour : 1 héros contre un groupe d'ennemis (1..n).
+## Ordre des tours basé sur la vitesse (initiative recalculée à chaque manche).
+## Logique pure, sans UI -> testable en headless.
 
 var rng: RNG
 
-# Acteurs en combat (copies de travail, on ne modifie pas les données sources).
 var hero := {}
-var enemy := {}
+var enemies: Array = []          # chaque ennemi est un Dictionary (copie de travail)
 var log_lines: Array[String] = []
+
+var _order: Array = []           # éléments : -1 pour le héros, sinon index d'ennemi (>=0)
+const HERO := -1
+var _order_pos := 0
+var round_num := 0
 
 func _init(rng_instance: RNG = null) -> void:
 	rng = rng_instance if rng_instance != null else RNG.new()
 
-## Prépare le combat à partir de l'état du héros et d'un id de monstre.
-func setup(hero_state: Dictionary, monster_id: String) -> void:
+## Prépare le combat. monster_ids : liste d'identifiants de monstres.
+func setup(hero_state: Dictionary, monster_ids: Array) -> void:
 	hero = {
 		"name": "Héros",
 		"hp": int(hero_state.get("current_hp", 1)),
@@ -25,30 +30,77 @@ func setup(hero_state: Dictionary, monster_id: String) -> void:
 		"speed": int(hero_state["stats"].get("speed", 0)),
 		"skills": hero_state.get("skills", []),
 	}
-	var m := DataRegistry.get_monster(monster_id)
-	enemy = {
-		"id": monster_id,
-		"name": m.get("display_name", "Ennemi"),
-		"hp": int(m.get("stats", {}).get("hp", 1)),
-		"max_hp": int(m.get("stats", {}).get("hp", 1)),
-		"attack": int(m.get("stats", {}).get("attack", 1)),
-		"defense": int(m.get("stats", {}).get("defense", 0)),
-		"speed": int(m.get("stats", {}).get("speed", 0)),
-		"xp_reward": int(m.get("xp_reward", 0)),
-		"loot_table_id": m.get("loot_table_id", ""),
-	}
+	enemies.clear()
+	for mid in monster_ids:
+		var m := DataRegistry.get_monster(mid)
+		if m.is_empty():
+			continue
+		var s: Dictionary = m.get("stats", {})
+		enemies.append({
+			"id": mid,
+			"name": m.get("display_name", "Ennemi"),
+			"hp": int(s.get("hp", 1)),
+			"max_hp": int(s.get("hp", 1)),
+			"attack": int(s.get("attack", 1)),
+			"defense": int(s.get("defense", 0)),
+			"speed": int(s.get("speed", 0)),
+			"xp_reward": int(m.get("xp_reward", 0)),
+			"loot_table_id": m.get("loot_table_id", ""),
+		})
+	_begin_round()
 
-## Formule de dégâts du projet (volontairement simple et originale).
-## Dégâts = max(1, power + attaque - défense) avec une légère variance aléatoire.
-func compute_damage(power: int, attacker: Dictionary, defender: Dictionary) -> int:
-	var raw := power + int(attacker.get("attack", 0)) - int(defender.get("defense", 0))
-	raw = max(1, raw)
-	var variance := rng.randi_range(-1, 1)
-	return max(1, raw + variance)
+# --- Déroulé des manches ----------------------------------------------------
 
-## Le héros utilise une compétence sur l'ennemi. Renvoie true si l'action a pu être jouée.
-func hero_use_skill(skill_id: String) -> bool:
-	if not is_ongoing():
+func _begin_round() -> void:
+	round_num += 1
+	# Liste d'initiative : tous les acteurs vivants, triés par vitesse décroissante.
+	# En cas d'égalité, le héros agit en premier.
+	var actors: Array = []
+	actors.append({ "ref": HERO, "speed": int(hero["speed"]), "hero": true })
+	for i in enemies.size():
+		if enemies[i]["hp"] > 0:
+			actors.append({ "ref": i, "speed": int(enemies[i]["speed"]), "hero": false })
+	actors.sort_custom(func(a, b):
+		if a["speed"] == b["speed"]:
+			return a["hero"] and not b["hero"]
+		return a["speed"] > b["speed"])
+	_order = []
+	for a in actors:
+		_order.append(a["ref"])
+	_order_pos = 0
+	_advance_until_hero()
+
+## Fait jouer les ennemis jusqu'à tomber sur le tour du héros (ou la fin du combat).
+func _advance_until_hero() -> void:
+	while _order_pos < _order.size():
+		if not is_ongoing():
+			return
+		var idx := int(_order[_order_pos])
+		if idx == HERO:
+			if hero["hp"] > 0:
+				return  # on attend l'action du joueur
+			_order_pos += 1
+			continue
+		if idx < enemies.size() and enemies[idx]["hp"] > 0:
+			_enemy_act(idx)
+		_order_pos += 1
+	# Manche terminée : on recommence si le combat continue.
+	if is_ongoing():
+		_begin_round()
+
+func _enemy_act(idx: int) -> void:
+	var e: Dictionary = enemies[idx]
+	var dmg := compute_damage(8, e, hero)
+	hero["hp"] = max(0, hero["hp"] - dmg)
+	log_lines.append("%s attaque : %d dégâts." % [e["name"], dmg])
+	if hero["hp"] <= 0:
+		log_lines.append("Héros est tombé...")
+
+# --- Action du héros --------------------------------------------------------
+
+## Le héros utilise une compétence sur l'ennemi ciblé. Renvoie true si jouée.
+func hero_use_skill(skill_id: String, target_index: int) -> bool:
+	if not is_ongoing() or not is_hero_turn():
 		return false
 	var skill := DataRegistry.get_skill(skill_id)
 	if skill.is_empty():
@@ -57,46 +109,74 @@ func hero_use_skill(skill_id: String) -> bool:
 	if hero["mana"] < cost:
 		log_lines.append("Pas assez d'énergie pour %s." % skill.get("display_name", skill_id))
 		return false
+	var target := _resolve_target(target_index)
+	if target < 0:
+		return false
 	hero["mana"] -= cost
 	if skill.get("effect_type", "") == "damage":
-		var dmg := compute_damage(int(skill.get("power", 0)), hero, enemy)
-		enemy["hp"] = max(0, enemy["hp"] - dmg)
-		log_lines.append("%s inflige %d dégâts." % [skill.get("display_name", skill_id), dmg])
-	_enemy_turn_if_alive()
+		var dmg := compute_damage(int(skill.get("power", 0)), hero, enemies[target])
+		enemies[target]["hp"] = max(0, enemies[target]["hp"] - dmg)
+		log_lines.append("%s sur %s : %d dégâts." % [
+			skill.get("display_name", skill_id), enemies[target]["name"], dmg])
+		if enemies[target]["hp"] <= 0:
+			log_lines.append("%s est vaincu !" % enemies[target]["name"])
+	_order_pos += 1
+	_advance_until_hero()
 	return true
 
-## Le monstre riposte s'il est encore en vie.
-func _enemy_turn_if_alive() -> void:
-	if enemy["hp"] <= 0:
-		log_lines.append("%s est vaincu !" % enemy["name"])
-		return
-	var dmg := compute_damage(8, enemy, hero)
-	hero["hp"] = max(0, hero["hp"] - dmg)
-	log_lines.append("%s riposte : %d dégâts." % [enemy["name"], dmg])
-	if hero["hp"] <= 0:
-		log_lines.append("Héros est tombé...")
+## Renvoie un index d'ennemi vivant : la cible demandée si valide, sinon le premier vivant.
+func _resolve_target(target_index: int) -> int:
+	if target_index >= 0 and target_index < enemies.size() and enemies[target_index]["hp"] > 0:
+		return target_index
+	return first_alive_enemy()
+
+func first_alive_enemy() -> int:
+	for i in enemies.size():
+		if enemies[i]["hp"] > 0:
+			return i
+	return -1
+
+func is_hero_turn() -> bool:
+	return _order_pos < _order.size() and int(_order[_order_pos]) == HERO and hero["hp"] > 0
+
+# --- État du combat ---------------------------------------------------------
 
 func is_ongoing() -> bool:
-	return hero["hp"] > 0 and enemy["hp"] > 0
+	return hero["hp"] > 0 and first_alive_enemy() >= 0
 
 func hero_won() -> bool:
-	return enemy["hp"] <= 0 and hero["hp"] > 0
+	return hero["hp"] > 0 and first_alive_enemy() < 0
 
 func hero_lost() -> bool:
 	return hero["hp"] <= 0
 
-## Génère le butin de l'ennemi vaincu : [{ "item_id", "count" }].
+func total_xp_reward() -> int:
+	var total := 0
+	for e in enemies:
+		total += int(e.get("xp_reward", 0))
+	return total
+
+# --- Dégâts & loot ----------------------------------------------------------
+
+## Formule de dégâts du projet : max(1, power + attaque - défense) avec légère variance.
+func compute_damage(power: int, attacker: Dictionary, defender: Dictionary) -> int:
+	var raw := power + int(attacker.get("attack", 0)) - int(defender.get("defense", 0))
+	raw = max(1, raw)
+	var variance := rng.randi_range(-1, 1)
+	return max(1, raw + variance)
+
+## Butin cumulé de tous les ennemis vaincus : [{ "item_id", "count" }].
 func roll_loot() -> Array:
 	var result: Array = []
-	var table := DataRegistry.get_loot_table(enemy.get("loot_table_id", ""))
-	if table.is_empty():
-		return result
-	var entries: Array = table.get("entries", [])
-	var rolls := int(table.get("rolls", 1))
-	for _i in rolls:
-		var idx := rng.weighted_pick(entries)
-		if idx >= 0:
-			var e: Dictionary = entries[idx]
-			var count := rng.randi_range(int(e.get("min", 1)), int(e.get("max", 1)))
-			result.append({ "item_id": e.get("item_id", ""), "count": count })
+	for e in enemies:
+		var table := DataRegistry.get_loot_table(e.get("loot_table_id", ""))
+		if table.is_empty():
+			continue
+		var entries: Array = table.get("entries", [])
+		for _i in int(table.get("rolls", 1)):
+			var idx := rng.weighted_pick(entries)
+			if idx >= 0:
+				var entry: Dictionary = entries[idx]
+				var count := rng.randi_range(int(entry.get("min", 1)), int(entry.get("max", 1)))
+				result.append({ "item_id": entry.get("item_id", ""), "count": count })
 	return result

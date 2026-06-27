@@ -1,7 +1,9 @@
 name: Build & Deploy Web
 
-# Exporte le build Web (Godot 4.7) et le publie sur GitHub Pages à chaque push sur main.
-# Lien jouable : https://bodji27200-web.github.io/mon-jeux-aethric-/
+# Sur push main : exporte le build Web (Godot 4.7), le valide, puis tente de publier sur Pages.
+# Le job "build" reste vert si tests + export passent. Le job "pages" est isolé et tolérant
+# (Pages indisponible sur dépôt privé en plan gratuit -> ce job peut échouer sans casser le build).
+# Lien jouable (une fois Pages actif) : https://bodji27200-web.github.io/mon-jeux-aethric-/
 
 on:
   push:
@@ -52,20 +54,31 @@ jobs:
           ./godot --headless --path . --export-release "Web" build/web/index.html
           test -f build/web/index.html
 
-      - uses: actions/configure-pages@v5
+      - name: Publier le build comme artefact
+        uses: actions/upload-artifact@v4
         with:
-          enablement: true
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
+          name: web-build
           path: build/web
 
-  deploy:
+  # Déploiement Pages isolé : si Pages n'est pas disponible (dépôt privé / plan gratuit),
+  # ce job échoue seul sans masquer le succès du build.
+  pages:
     needs: build
     runs-on: ubuntu-latest
+    continue-on-error: true
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: build/web
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
       - id: deployment
         uses: actions/deploy-pages@v4

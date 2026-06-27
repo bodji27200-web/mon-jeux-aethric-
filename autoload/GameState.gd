@@ -8,8 +8,8 @@ var player := {}            # voir _new_player()
 var inventory := {}         # item_id -> count
 var current_zone := STARTING_ZONE
 
-# Transitoire (non sauvegardé) : monstre à affronter lors d'une rencontre.
-var battle_monster_id := ""
+# Transitoire (non sauvegardé) : groupe de monstres à affronter lors d'une rencontre.
+var battle_monster_ids: Array = []
 
 func _ready() -> void:
 	if player.is_empty():

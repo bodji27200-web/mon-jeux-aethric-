@@ -16,8 +16,8 @@ Légende : ✅ fait · 🚧 en cours · ⬜ à faire
   victoire → loot simple → sauvegarde versionnée → rechargement. Export Web. 18 tests OK.
 - ✅ **Lot 2 — Pipeline d'export Web + lien jouable.** GitHub Actions exporte le build HTML5 et le
   publie sur GitHub Pages à chaque push sur main. Lien jouable persistant.
-- ⬜ **Lot 3 — Profondeur du combat.** Plusieurs actions, coût de ressource (mana/énergie), file de
-  tours basée sur la vitesse, plusieurs ennemis.
+- ✅ **Lot 3 — Profondeur du combat.** Plusieurs ennemis (groupes 1-2), file de tours basée sur la
+  vitesse (initiative par manche), sélection de cible, coût de ressource. 22 tests OK.
 - ⬜ **Lot 4 — Effets de statut.** Buffs/debuffs, poison/brûlure/etc. (effets génériques data-driven),
   durée, résolution en fin de tour.
 - ⬜ **Lot 5 — Classes & progression.** Classes jouables data-driven, montée de niveau, courbe d'XP,

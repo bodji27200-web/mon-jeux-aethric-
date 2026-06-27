@@ -3,7 +3,10 @@
   "display_name": "Clairière des Brumes",
   "scene_path": "res://scenes/world/World.tscn",
   "encounter_table": [
-    { "monster_id": "mob_rodeur_landes", "weight": 100 }
+    { "monster_id": "mob_rodeur_landes", "weight": 60 },
+    { "monster_id": "mob_larve_spectrale", "weight": 40 }
   ],
-  "encounter_step_chance": 0.012
+  "encounter_step_chance": 0.012,
+  "encounter_group_min": 1,
+  "encounter_group_max": 2
 }

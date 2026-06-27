@@ -91,9 +91,16 @@ func _roll_encounter() -> void:
 	if _rng.randf() < chance:
 		_moving = false
 		var table: Array = _zone.get("encounter_table", [])
-		var idx := _rng.weighted_pick(table)
-		if idx >= 0:
-			GameState.battle_monster_id = table[idx].get("monster_id", "")
+		var group_min := int(_zone.get("encounter_group_min", 1))
+		var group_max := int(_zone.get("encounter_group_max", 1))
+		var count := _rng.randi_range(group_min, group_max)
+		var group: Array = []
+		for _i in count:
+			var idx := _rng.weighted_pick(table)
+			if idx >= 0:
+				group.append(table[idx].get("monster_id", ""))
+		if not group.is_empty():
+			GameState.battle_monster_ids = group
 			SceneRouter.goto("res://scenes/combat/Combat.tscn")
 
 func _on_save() -> void:

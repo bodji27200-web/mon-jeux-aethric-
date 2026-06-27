@@ -10,6 +10,8 @@ func _ready() -> void:
 	print("=== Tests Velmoria ===")
 	_test_data_loaded()
 	_test_combat_victory()
+	_test_combat_group()
+	_test_turn_order()
 	_test_loot()
 	_test_save_roundtrip()
 	await _test_scenes_instantiate()
@@ -32,22 +34,44 @@ func _test_data_loaded() -> void:
 	_check("table de loot chargée", not DataRegistry.get_loot_table("loot_lande").is_empty())
 
 func _test_combat_victory() -> void:
-	print("- Combat")
+	print("- Combat 1v1")
 	GameState.new_game()
 	var eng := CombatEngine.new(RNG.new(42))
-	eng.setup(GameState.player, "mob_rodeur_landes")
+	eng.setup(GameState.player, ["mob_rodeur_landes"])
 	var safety := 0
 	while eng.is_ongoing() and safety < 100:
-		eng.hero_use_skill("skl_frappe")
+		eng.hero_use_skill("skl_frappe", eng.first_alive_enemy())
 		safety += 1
 	_check("le combat se termine", not eng.is_ongoing())
 	_check("le héros gagne contre un rôdeur", eng.hero_won())
-	_check("dégâts toujours >= 1", eng.compute_damage(0, eng.hero, eng.enemy) >= 1)
+	_check("dégâts toujours >= 1", eng.compute_damage(0, eng.hero, eng.enemies[0]) >= 1)
+
+func _test_combat_group() -> void:
+	print("- Combat de groupe")
+	GameState.new_game()
+	var eng := CombatEngine.new(RNG.new(3))
+	eng.setup(GameState.player, ["mob_rodeur_landes", "mob_larve_spectrale"])
+	_check("deux ennemis présents", eng.enemies.size() == 2)
+	var safety := 0
+	while eng.is_ongoing() and safety < 200:
+		eng.hero_use_skill("skl_garde_appuyee", eng.first_alive_enemy())
+		safety += 1
+	_check("le combat de groupe se termine", not eng.is_ongoing())
+	_check("XP cumulée des deux ennemis", eng.total_xp_reward() == 21)
+
+func _test_turn_order() -> void:
+	print("- Ordre des tours (vitesse)")
+	GameState.new_game()
+	# La larve (vitesse 11) est plus rapide que le héros (vitesse 7) : elle agit avant.
+	var eng := CombatEngine.new(RNG.new(1))
+	eng.setup(GameState.player, ["mob_larve_spectrale"])
+	var hp_max := int(GameState.player["stats"]["hp"])
+	_check("l'ennemi rapide frappe avant le 1er tour du héros", eng.hero["hp"] < hp_max)
 
 func _test_loot() -> void:
 	print("- Loot")
 	var eng := CombatEngine.new(RNG.new(7))
-	eng.setup(GameState.player, "mob_rodeur_landes")
+	eng.setup(GameState.player, ["mob_rodeur_landes"])
 	var loot := eng.roll_loot()
 	_check("le loot renvoie au moins une entrée", loot.size() >= 1)
 	var valid := true
@@ -75,7 +99,7 @@ func _test_save_roundtrip() -> void:
 func _test_scenes_instantiate() -> void:
 	print("- Scènes (smoke test)")
 	GameState.new_game()
-	GameState.battle_monster_id = "mob_rodeur_landes"
+	GameState.battle_monster_ids = ["mob_rodeur_landes", "mob_larve_spectrale"]
 	for path in [
 		"res://scenes/boot/Boot.tscn",
 		"res://scenes/world/World.tscn",
