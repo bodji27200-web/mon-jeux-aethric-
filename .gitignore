@@ -1,0 +1,12 @@
+# Godot
+.godot/
+.import/
+export.cfg
+*.translation
+
+# Build Web (régénéré par CI / localement)
+build/
+
+# Divers
+*.tmp
+.DS_Store

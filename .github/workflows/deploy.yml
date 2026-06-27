@@ -1,0 +1,71 @@
+name: Build & Deploy Web
+
+# Exporte le build Web (Godot 4.7) et le publie sur GitHub Pages à chaque push sur main.
+# Lien jouable : https://bodji27200-web.github.io/mon-jeux-aethric-/
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: "4.7-stable"
+  GODOT_TPL_DIR: "4.7.stable"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer Godot 4.7 + templates d'export
+        run: |
+          set -e
+          BASE="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}"
+          curl -L -o godot.zip "${BASE}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}_linux.x86_64" godot
+          chmod +x godot
+          curl -L -o templates.tpz "${BASE}/Godot_v${GODOT_VERSION}_export_templates.tpz"
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_TPL_DIR}"
+          unzip -q templates.tpz -d tpl
+          mv tpl/templates/* "$HOME/.local/share/godot/export_templates/${GODOT_TPL_DIR}/"
+
+      - name: Importer le projet
+        run: ./godot --headless --path . --import || true
+
+      - name: Tests automatisés
+        run: ./godot --headless --path . res://tests/TestRunner.tscn
+
+      - name: Export Web
+        run: |
+          mkdir -p build/web
+          ./godot --headless --path . --export-release "Web" build/web/index.html
+          test -f build/web/index.html
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
