@@ -13,6 +13,7 @@ func _ready() -> void:
 	_test_combat_group()
 	_test_turn_order()
 	_test_status_effects()
+	_test_crit_dodge()
 	_test_progression()
 	_test_loot()
 	_test_save_roundtrip()
@@ -93,6 +94,26 @@ func _test_status_effects() -> void:
 	eng2.hero_use_skill("skl_onde_corrosive", 0)
 	var applied: bool = (not eng2.enemies[0]["statuses"].is_empty()) or eng2.enemies[0]["hp"] <= 0
 	_check("Onde Corrosive applique un statut", applied)
+
+func _test_crit_dodge() -> void:
+	print("- Critique & esquive")
+	var attacker := { "attack": 12, "crit_chance": 0.0, "crit_mult": 1.5, "dodge_chance": 0.0 }
+	var defender := { "defense": 3, "dodge_chance": 0.0 }
+	# Esquive garantie (dodge_chance 100).
+	var eng := CombatEngine.new(RNG.new(1))
+	var dodging := { "defense": 3, "dodge_chance": 100.0 }
+	var res_dodge := eng.resolve_attack(10, attacker, dodging)
+	_check("esquive à 100% -> attaque esquivée", res_dodge["dodged"])
+	_check("esquive -> 0 dégât", int(res_dodge["damage"]) == 0)
+	# Critique déterministe : même graine, avec/sans critique garanti.
+	var eng_a := CombatEngine.new(RNG.new(123))
+	var res_a := eng_a.resolve_attack(10, attacker, defender)
+	var crit_attacker := { "attack": 12, "crit_chance": 100.0, "crit_mult": 2.0, "dodge_chance": 0.0 }
+	var eng_b := CombatEngine.new(RNG.new(123))
+	var res_b := eng_b.resolve_attack(10, crit_attacker, defender)
+	_check("sans critique -> pas de crit", not res_a["crit"])
+	_check("crit_chance 100% -> coup critique", res_b["crit"])
+	_check("le critique applique x2", int(res_b["damage"]) == int(round(int(res_a["damage"]) * 2.0)))
 
 func _test_progression() -> void:
 	print("- Progression (niveaux)")

@@ -28,6 +28,9 @@ func setup(hero_state: Dictionary, monster_ids: Array) -> void:
 		"attack": int(hero_state["stats"].get("attack", 1)),
 		"defense": int(hero_state["stats"].get("defense", 0)),
 		"speed": int(hero_state["stats"].get("speed", 0)),
+		"crit_chance": float(hero_state["stats"].get("crit_chance", 0)),
+		"crit_mult": float(hero_state["stats"].get("crit_mult", 1.5)),
+		"dodge_chance": float(hero_state["stats"].get("dodge_chance", 0)),
 		"skills": hero_state.get("skills", []),
 		"statuses": [],
 	}
@@ -45,6 +48,9 @@ func setup(hero_state: Dictionary, monster_ids: Array) -> void:
 			"attack": int(s.get("attack", 1)),
 			"defense": int(s.get("defense", 0)),
 			"speed": int(s.get("speed", 0)),
+			"crit_chance": float(s.get("crit_chance", 0)),
+			"crit_mult": float(s.get("crit_mult", 1.5)),
+			"dodge_chance": float(s.get("dodge_chance", 0)),
 			"xp_reward": int(m.get("xp_reward", 0)),
 			"loot_table_id": m.get("loot_table_id", ""),
 			"statuses": [],
@@ -96,9 +102,13 @@ func _advance_until_hero() -> void:
 
 func _enemy_act(idx: int) -> void:
 	var e: Dictionary = enemies[idx]
-	var dmg := compute_damage(8, e, hero)
-	hero["hp"] = max(0, hero["hp"] - dmg)
-	log_lines.append("%s attaque : %d dégâts." % [e["name"], dmg])
+	var res := resolve_attack(8, e, hero)
+	if res["dodged"]:
+		log_lines.append("Héros esquive l'attaque de %s !" % e["name"])
+		return
+	hero["hp"] = max(0, hero["hp"] - int(res["damage"]))
+	log_lines.append("%s attaque : %d dégâts%s." % [
+		e["name"], int(res["damage"]), "  CRITIQUE !" if res["crit"] else ""])
 	if hero["hp"] <= 0:
 		log_lines.append("Héros est tombé...")
 
@@ -120,10 +130,15 @@ func hero_use_skill(skill_id: String, target_index: int) -> bool:
 		return false
 	hero["mana"] -= cost
 	if int(skill.get("power", 0)) > 0 and skill.get("effect_type", "") == "damage":
-		var dmg := compute_damage(int(skill.get("power", 0)), hero, enemies[target])
-		enemies[target]["hp"] = max(0, enemies[target]["hp"] - dmg)
-		log_lines.append("%s sur %s : %d dégâts." % [
-			skill.get("display_name", skill_id), enemies[target]["name"], dmg])
+		var res := resolve_attack(int(skill.get("power", 0)), hero, enemies[target])
+		if res["dodged"]:
+			log_lines.append("%s esquive %s !" % [
+				enemies[target]["name"], skill.get("display_name", skill_id)])
+		else:
+			enemies[target]["hp"] = max(0, enemies[target]["hp"] - int(res["damage"]))
+			log_lines.append("%s sur %s : %d dégâts%s." % [
+				skill.get("display_name", skill_id), enemies[target]["name"],
+				int(res["damage"]), "  CRITIQUE !" if res["crit"] else ""])
 	if enemies[target]["hp"] > 0:
 		_apply_status_effects(skill, enemies[target])
 	if enemies[target]["hp"] <= 0:
@@ -173,6 +188,17 @@ func compute_damage(power: int, attacker: Dictionary, defender: Dictionary) -> i
 	raw = max(1, raw)
 	var variance := rng.randi_range(-1, 1)
 	return max(1, raw + variance)
+
+## Résout une attaque complète : esquive éventuelle, dégâts, puis coup critique.
+## Renvoie { "damage": int, "dodged": bool, "crit": bool }.
+func resolve_attack(power: int, attacker: Dictionary, defender: Dictionary) -> Dictionary:
+	if rng.randf() * 100.0 < float(defender.get("dodge_chance", 0)):
+		return { "damage": 0, "dodged": true, "crit": false }
+	var dmg := compute_damage(power, attacker, defender)
+	var crit := rng.randf() * 100.0 < float(attacker.get("crit_chance", 0))
+	if crit:
+		dmg = max(1, int(round(dmg * float(attacker.get("crit_mult", 1.5)))))
+	return { "damage": dmg, "dodged": false, "crit": crit }
 
 ## Valeur d'une stat après application des modificateurs de statut (atk_down / def_down).
 func _effective_stat(actor: Dictionary, stat: String) -> int:

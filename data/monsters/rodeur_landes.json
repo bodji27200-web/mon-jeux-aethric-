@@ -3,7 +3,7 @@
   "display_name": "Rôdeur des Landes",
   "description": "Petite créature hostile qui erre dans les herbes hautes.",
   "sprite": "res://assets/sprites/rodeur_landes.svg",
-  "stats": { "hp": 28, "mana": 0, "attack": 8, "defense": 3, "speed": 5 },
+  "stats": { "hp": 28, "mana": 0, "attack": 8, "defense": 3, "speed": 5, "crit_chance": 3, "dodge_chance": 3 },
   "skills": ["skl_frappe"],
   "loot_table_id": "loot_lande",
   "xp_reward": 12

@@ -3,8 +3,8 @@
   "display_name": "Sentinelle de Fer",
   "description": "Combattante robuste qui tient la ligne de front.",
   "sprite": "res://assets/sprites/hero.svg",
-  "base_stats": { "hp": 60, "mana": 20, "attack": 12, "defense": 8, "speed": 7 },
-  "growth_per_level": { "hp": 8, "mana": 2, "attack": 2, "defense": 2, "speed": 1 },
+  "base_stats": { "hp": 60, "mana": 20, "attack": 12, "defense": 8, "speed": 7, "crit_chance": 8, "crit_mult": 1.5, "dodge_chance": 5 },
+  "growth_per_level": { "hp": 8, "mana": 2, "attack": 2, "defense": 2, "speed": 1, "crit_chance": 1 },
   "starting_skills": ["skl_frappe", "skl_garde_appuyee"],
   "skill_unlocks": [
     { "level": 2, "skill_id": "skl_onde_corrosive" }

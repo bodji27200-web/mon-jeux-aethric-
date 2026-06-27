@@ -22,8 +22,8 @@ Légende : ✅ fait · 🚧 en cours · ⬜ à faire
   résolution en début de tour de l'acteur. Compétence Onde Corrosive. 26 tests OK.
 - ✅ **Lot 5 — Classes & progression.** Montée de niveau (croissance des stats data-driven), courbe
   d'XP, déblocage de compétences par palier (Onde Corrosive au niv.2). 33 tests OK.
-- ⬜ **Lot 6 — Stats & formules.** Stats dérivées (attaque/défense/crit/esquive), formule de dégâts
-  centralisée et testée, RNG déterministe pour les tests.
+- ✅ **Lot 6 — Stats & formules.** Coup critique (chance + multiplicateur) et esquive, résolution
+  d'attaque centralisée (`resolve_attack`), RNG déterministe testé. 38 tests OK.
 - ⬜ **Lot 7 — Inventaire & équipement.** Slots d'équipement, modificateurs de stats, UI inventaire
   mobile, objets consommables en combat.
 - ⬜ **Lot 8 — Sauvegarde robuste & migrations.** Plusieurs slots, migration de version, gestion des
