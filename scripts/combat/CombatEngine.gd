@@ -147,6 +147,23 @@ func hero_use_skill(skill_id: String, target_index: int) -> bool:
 	_advance_until_hero()
 	return true
 
+## Le héros utilise un objet consommable (ex. potion de soin). Renvoie true si joué.
+## La gestion de l'inventaire (retrait de l'objet) est faite par l'appelant.
+func hero_use_item(item_id: String) -> bool:
+	if not is_ongoing() or not is_hero_turn():
+		return false
+	var item := DataRegistry.get_item(item_id)
+	var on_use: Dictionary = item.get("on_use", {})
+	if on_use.get("effect_type", "") == "heal":
+		var heal := int(on_use.get("power", 0))
+		var before := int(hero["hp"])
+		hero["hp"] = min(int(hero["max_hp"]), before + heal)
+		log_lines.append("Héros utilise %s : +%d PV." % [
+			item.get("display_name", item_id), int(hero["hp"]) - before])
+	_order_pos += 1
+	_advance_until_hero()
+	return true
+
 ## Renvoie un index d'ennemi vivant : la cible demandée si valide, sinon le premier vivant.
 func _resolve_target(target_index: int) -> int:
 	if target_index >= 0 and target_index < enemies.size() and enemies[target_index]["hp"] > 0:

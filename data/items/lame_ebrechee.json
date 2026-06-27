@@ -1,0 +1,8 @@
+{
+  "id": "itm_lame_ebrechee",
+  "display_name": "Lame Ébréchée",
+  "description": "Une arme usée mais qui augmente encore l'attaque.",
+  "slot": "weapon",
+  "stat_modifiers": { "attack": 4 },
+  "stackable": false
+}

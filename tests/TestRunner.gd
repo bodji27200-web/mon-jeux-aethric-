@@ -15,6 +15,7 @@ func _ready() -> void:
 	_test_status_effects()
 	_test_crit_dodge()
 	_test_progression()
+	_test_equipment_and_items()
 	_test_loot()
 	_test_save_roundtrip()
 	await _test_scenes_instantiate()
@@ -130,6 +131,29 @@ func _test_progression() -> void:
 	GameState.grant_xp(1000)
 	_check("XP massive fait gagner plusieurs niveaux", int(GameState.player["level"]) >= 3)
 	_check("XP restante sous le prochain seuil", int(GameState.player["xp"]) < GameState.xp_to_next_level())
+
+func _test_equipment_and_items() -> void:
+	print("- Équipement & objets")
+	GameState.new_game()
+	var atk0 := int(GameState.get_effective_stats()["attack"])
+	GameState.add_item("itm_lame_ebrechee", 1)
+	_check("équiper l'arme réussit", GameState.equip("itm_lame_ebrechee"))
+	_check("l'arme augmente l'attaque (+4)", int(GameState.get_effective_stats()["attack"]) == atk0 + 4)
+	_check("arme bien équipée", GameState.player["equipment"]["weapon"] == "itm_lame_ebrechee")
+	_check("arme retirée du sac", int(GameState.inventory.get("itm_lame_ebrechee", 0)) == 0)
+	var hp0 := int(GameState.get_effective_stats()["hp"])
+	GameState.add_item("itm_plastron_cuir", 1)
+	GameState.equip("itm_plastron_cuir")
+	_check("l'armure augmente les PV max (+10)", int(GameState.get_effective_stats()["hp"]) == hp0 + 10)
+	# Potion en combat.
+	GameState.new_game()
+	GameState.player["current_hp"] = 10
+	var eng := CombatEngine.new(RNG.new(2))
+	eng.setup(GameState.build_combat_state(), ["mob_rodeur_landes"])
+	var hp_before := int(eng.hero["hp"])
+	_check("le héros démarre blessé (10 PV)", hp_before == 10)
+	eng.hero_use_item("itm_potion_seve")
+	_check("la potion soigne le héros", int(eng.hero["hp"]) > hp_before)
 
 func _test_loot() -> void:
 	print("- Loot")

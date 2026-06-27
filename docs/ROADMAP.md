@@ -24,8 +24,8 @@ Légende : ✅ fait · 🚧 en cours · ⬜ à faire
   d'XP, déblocage de compétences par palier (Onde Corrosive au niv.2). 33 tests OK.
 - ✅ **Lot 6 — Stats & formules.** Coup critique (chance + multiplicateur) et esquive, résolution
   d'attaque centralisée (`resolve_attack`), RNG déterministe testé. 38 tests OK.
-- ⬜ **Lot 7 — Inventaire & équipement.** Slots d'équipement, modificateurs de stats, UI inventaire
-  mobile, objets consommables en combat.
+- ✅ **Lot 7 — Inventaire & équipement.** 3 emplacements (arme/armure/bijou), modificateurs de stats,
+  stats effectives, UI Sac mobile (équiper), consommables en combat (potion). 45 tests OK.
 - ⬜ **Lot 8 — Sauvegarde robuste & migrations.** Plusieurs slots, migration de version, gestion des
   saves corrompues, sauvegarde auto.
 

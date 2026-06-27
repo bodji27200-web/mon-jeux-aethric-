@@ -1,0 +1,8 @@
+{
+  "id": "itm_plastron_cuir",
+  "display_name": "Plastron de Cuir",
+  "description": "Une protection légère : défense et points de vie en plus.",
+  "slot": "armor",
+  "stat_modifiers": { "defense": 3, "hp": 10 },
+  "stackable": false
+}

@@ -74,23 +74,125 @@ func _ready() -> void:
 	add_child(_player_marker)
 	_target = _player_marker.position
 
-	# Bouton sauvegarder (en bas).
+	# Boutons du bas : Sac (inventaire) + Sauvegarder.
+	var bag_btn := Button.new()
+	bag_btn.text = "Sac"
+	bag_btn.custom_minimum_size = Vector2(180, 88)
+	bag_btn.add_theme_font_size_override("font_size", 28)
+	bag_btn.position = Vector2(40, 1140)
+	bag_btn.pressed.connect(_toggle_inventory)
+	add_child(bag_btn)
+
 	var save_btn := Button.new()
 	save_btn.text = "Sauvegarder"
 	save_btn.custom_minimum_size = Vector2(280, 88)
 	save_btn.add_theme_font_size_override("font_size", 28)
-	save_btn.position = Vector2(220, 1140)
+	save_btn.position = Vector2(260, 1140)
 	save_btn.pressed.connect(_on_save)
 	add_child(save_btn)
 
 func _update_hud() -> void:
 	var p := GameState.player
+	var s := GameState.get_effective_stats()
 	_hud_info.text = "%s — Niv.%d  PV %d/%d" % [
 		_zone.get("display_name", "?"),
 		int(p.get("level", 1)),
 		int(p.get("current_hp", 0)),
-		int(p["stats"].get("hp", 0)),
+		int(s.get("hp", 0)),
 	]
+
+# --- Inventaire ------------------------------------------------------------
+
+var _inv_panel: Control = null
+
+func _toggle_inventory() -> void:
+	if _inv_panel != null:
+		_inv_panel.queue_free()
+		_inv_panel = null
+		return
+	_inv_panel = _build_inventory_panel()
+	add_child(_inv_panel)
+
+func _build_inventory_panel() -> Control:
+	var panel := ColorRect.new()
+	panel.color = Color(0.08, 0.07, 0.11, 0.95)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	box.position = Vector2(40, 80)
+	box.custom_minimum_size = Vector2(640, 0)
+	panel.add_child(box)
+
+	var title := Label.new()
+	title.text = "Sac & Équipement"
+	title.add_theme_font_size_override("font_size", 34)
+	box.add_child(title)
+
+	# Équipement porté.
+	var equip: Dictionary = GameState.player.get("equipment", {})
+	for slot in ["weapon", "armor", "trinket"]:
+		var id: String = equip.get(slot, "")
+		var item_name := "—"
+		if id != "":
+			item_name = DataRegistry.get_item(id).get("display_name", id)
+		var row := Label.new()
+		row.text = "%s : %s" % [_slot_label(slot), item_name]
+		row.add_theme_font_size_override("font_size", 24)
+		box.add_child(row)
+
+	var sep := Label.new()
+	sep.text = "— Objets —"
+	sep.add_theme_font_size_override("font_size", 26)
+	box.add_child(sep)
+
+	if GameState.inventory.is_empty():
+		var empty := Label.new()
+		empty.text = "(vide)"
+		empty.add_theme_font_size_override("font_size", 22)
+		box.add_child(empty)
+	else:
+		for item_id in GameState.inventory:
+			var item := DataRegistry.get_item(item_id)
+			var count := int(GameState.inventory[item_id])
+			var hb := HBoxContainer.new()
+			hb.add_theme_constant_override("separation", 12)
+			var lbl := Label.new()
+			lbl.text = "%s ×%d" % [item.get("display_name", item_id), count]
+			lbl.add_theme_font_size_override("font_size", 24)
+			lbl.custom_minimum_size = Vector2(420, 0)
+			hb.add_child(lbl)
+			if item.get("slot", "") in ["weapon", "armor", "trinket"]:
+				var eq := Button.new()
+				eq.text = "Équiper"
+				eq.add_theme_font_size_override("font_size", 22)
+				eq.pressed.connect(_on_equip.bind(item_id))
+				hb.add_child(eq)
+			box.add_child(hb)
+
+	var close := Button.new()
+	close.text = "Fermer"
+	close.custom_minimum_size = Vector2(640, 80)
+	close.add_theme_font_size_override("font_size", 28)
+	close.pressed.connect(_toggle_inventory)
+	box.add_child(close)
+	return panel
+
+func _slot_label(slot: String) -> String:
+	match slot:
+		"weapon": return "Arme"
+		"armor": return "Armure"
+		"trinket": return "Bijou"
+	return slot
+
+func _on_equip(item_id: String) -> void:
+	if GameState.equip(item_id):
+		_update_hud()
+		# Reconstruire le panneau pour refléter le changement.
+		if _inv_panel != null:
+			_inv_panel.queue_free()
+			_inv_panel = _build_inventory_panel()
+			add_child(_inv_panel)
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch and event.pressed:

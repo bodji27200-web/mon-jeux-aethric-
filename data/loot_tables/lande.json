@@ -2,7 +2,9 @@
   "id": "loot_lande",
   "rolls": 1,
   "entries": [
-    { "item_id": "itm_eclat_quartz", "weight": 70, "min": 1, "max": 2 },
-    { "item_id": "itm_potion_seve", "weight": 30, "min": 1, "max": 1 }
+    { "item_id": "itm_eclat_quartz", "weight": 55, "min": 1, "max": 2 },
+    { "item_id": "itm_potion_seve", "weight": 30, "min": 1, "max": 1 },
+    { "item_id": "itm_lame_ebrechee", "weight": 8, "min": 1, "max": 1 },
+    { "item_id": "itm_plastron_cuir", "weight": 7, "min": 1, "max": 1 }
   ]
 }

@@ -29,7 +29,7 @@ func _ready() -> void:
 	add_child(dark)
 
 	_engine = CombatEngine.new()
-	_engine.setup(GameState.player, GameState.battle_monster_ids)
+	_engine.setup(GameState.build_combat_state(), GameState.battle_monster_ids)
 	_selected_target = _engine.first_alive_enemy()
 
 	var title := Label.new()
@@ -122,6 +122,40 @@ func _build_actions() -> void:
 		b.add_theme_font_size_override("font_size", 30)
 		b.pressed.connect(_on_skill.bind(skill_id))
 		_action_box.add_child(b)
+	# Consommables disponibles dans le sac.
+	for item_id in GameState.inventory:
+		var item := DataRegistry.get_item(item_id)
+		if item.get("slot", "") != "consumable":
+			continue
+		var count := int(GameState.inventory[item_id])
+		if count <= 0:
+			continue
+		var ib := Button.new()
+		ib.text = "%s ×%d" % [item.get("display_name", item_id), count]
+		ib.custom_minimum_size = Vector2(624, 76)
+		ib.add_theme_font_size_override("font_size", 26)
+		ib.modulate = Color(0.8, 1.0, 0.85)
+		ib.pressed.connect(_on_item.bind(item_id))
+		_action_box.add_child(ib)
+
+func _on_item(item_id: String) -> void:
+	if not _engine.is_ongoing():
+		return
+	var hero_before := int(_engine.hero["hp"])
+	if not _engine.hero_use_item(item_id):
+		return
+	GameState.remove_item(item_id, 1)
+	var heal := int(_engine.hero["hp"]) - hero_before
+	if heal > 0:
+		_float_number("+%d" % heal, Color(0.5, 1.0, 0.6), _hero_sprite.global_position + Vector2(40, 0))
+	# Le monstre a pu riposter pendant l'usage : animer d'éventuels dégâts au héros.
+	var hero_dmg := hero_before + heal - int(_engine.hero["hp"])
+	if hero_dmg > 0:
+		_flash(_hero_sprite)
+	_build_actions()
+	_refresh()
+	if not _engine.is_ongoing():
+		_end_combat()
 
 func _on_select_target(i: int) -> void:
 	if i < _engine.enemies.size() and _engine.enemies[i]["hp"] > 0:
