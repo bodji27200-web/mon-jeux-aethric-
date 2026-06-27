@@ -2,6 +2,7 @@
   "id": "mob_larve_spectrale",
   "display_name": "Larve Spectrale",
   "description": "Créature rapide et fragile, surgie des brumes.",
+  "sprite": "res://assets/sprites/larve_spectrale.svg",
   "stats": { "hp": 18, "mana": 0, "attack": 6, "defense": 1, "speed": 11 },
   "skills": ["skl_frappe"],
   "loot_table_id": "loot_lande",

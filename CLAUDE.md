@@ -95,3 +95,5 @@ victoire → loot → sauvegarde → retour dans la zone → export Web jouable 
 | 2026-06-27 | Lot 4 : effets de statut data-driven (DoT, debuffs). 26 tests OK. | Variété tactique. |
 | 2026-06-27 | Lot 5 : progression (niveaux, courbe XP, déblocage de compétences). 33 tests OK. | Évolution du personnage. |
 | 2026-06-27 | Pages bloqué : dépôt privé en plan gratuit. CI build/test/export OK mais déploiement Pages échoue. | Décision utilisateur requise (dépôt public ou plan payant). |
+| 2026-06-27 | Dépôt rendu public par l'utilisateur → Pages déploie. Lien jouable live. | Débloque le lien jouable gratuit. |
+| 2026-06-27 | Habillage & pipeline d'assets : chemins d'images data-driven (background/sprite) avec fallback, fond de zone, sprites, combat animé (dégâts flottants, flash). Correction du bug tactile (mouse_filter). 33 tests OK. | Intégrer les images originales de l'utilisateur + rendre le jeu vivant. |

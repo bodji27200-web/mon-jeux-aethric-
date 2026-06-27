@@ -1,7 +1,7 @@
 extends Control
 ## Exploration de zone : déplacement tactile (tap-to-move) + déclenchement de rencontres.
 
-var _player_marker: ColorRect
+var _player_marker: Control
 var _target: Vector2
 var _moving := false
 var _hud_info: Label
@@ -15,15 +15,35 @@ var _accum_distance := 0.0
 func _ready() -> void:
 	_zone = DataRegistry.get_zone(GameState.current_zone)
 
-	var bg := ColorRect.new()
-	bg.color = Color(0.20, 0.30, 0.22)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	# Fond : image de la zone si disponible, sinon couleur unie (fallback).
+	var bg_tex := Assets.texture(_zone.get("background", ""))
+	if bg_tex != null:
+		var bg_img := TextureRect.new()
+		bg_img.texture = bg_tex
+		bg_img.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		bg_img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		bg_img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(bg_img)
+	else:
+		var bg := ColorRect.new()
+		bg.color = Color(0.20, 0.30, 0.22)
+		bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(bg)
+
+	# Bandeau sombre translucide en haut pour la lisibilité du texte sur l'image.
+	var top_strip := ColorRect.new()
+	top_strip.color = Color(0, 0, 0, 0.45)
+	top_strip.position = Vector2(0, 40)
+	top_strip.size = Vector2(720, 220)
+	top_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(top_strip)
 
 	# Bandeau d'info en haut.
 	_hud_info = Label.new()
 	_hud_info.add_theme_font_size_override("font_size", 28)
 	_hud_info.position = Vector2(24, 60)
+	_hud_info.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_hud_info)
 	_update_hud()
 
@@ -32,12 +52,24 @@ func _ready() -> void:
 	hint.text = "Touche l'écran pour te déplacer.\nDes créatures rôdent dans les herbes."
 	hint.add_theme_font_size_override("font_size", 22)
 	hint.position = Vector2(24, 150)
+	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(hint)
 
-	# Marqueur du joueur.
-	_player_marker = ColorRect.new()
-	_player_marker.color = Color(0.42, 0.78, 0.75)
-	_player_marker.size = Vector2(48, 48)
+	# Héros : sprite de la classe si disponible, sinon un carré (fallback).
+	var cls := DataRegistry.get_class_def(GameState.player.get("class_id", ""))
+	var hero_tex := Assets.texture(cls.get("sprite", ""))
+	if hero_tex != null:
+		var spr := TextureRect.new()
+		spr.texture = hero_tex
+		spr.size = Vector2(72, 72)
+		spr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
+		_player_marker = spr
+	else:
+		var rect := ColorRect.new()
+		rect.color = Color(0.42, 0.78, 0.75)
+		rect.size = Vector2(48, 48)
+		_player_marker = rect
+	_player_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_player_marker.position = Vector2(336, 620)
 	add_child(_player_marker)
 	_target = _player_marker.position
