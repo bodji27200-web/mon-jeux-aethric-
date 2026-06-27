@@ -20,8 +20,8 @@ Légende : ✅ fait · 🚧 en cours · ⬜ à faire
   vitesse (initiative par manche), sélection de cible, coût de ressource. 22 tests OK.
 - ✅ **Lot 4 — Effets de statut.** Altérations data-driven (DoT, debuff d'attaque/défense), durée,
   résolution en début de tour de l'acteur. Compétence Onde Corrosive. 26 tests OK.
-- ⬜ **Lot 5 — Classes & progression.** Classes jouables data-driven, montée de niveau, courbe d'XP,
-  déblocage de compétences par palier.
+- ✅ **Lot 5 — Classes & progression.** Montée de niveau (croissance des stats data-driven), courbe
+  d'XP, déblocage de compétences par palier (Onde Corrosive au niv.2). 33 tests OK.
 - ⬜ **Lot 6 — Stats & formules.** Stats dérivées (attaque/défense/crit/esquive), formule de dégâts
   centralisée et testée, RNG déterministe pour les tests.
 - ⬜ **Lot 7 — Inventaire & équipement.** Slots d'équipement, modificateurs de stats, UI inventaire

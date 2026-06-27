@@ -13,6 +13,7 @@ func _ready() -> void:
 	_test_combat_group()
 	_test_turn_order()
 	_test_status_effects()
+	_test_progression()
 	_test_loot()
 	_test_save_roundtrip()
 	await _test_scenes_instantiate()
@@ -93,6 +94,22 @@ func _test_status_effects() -> void:
 	var applied: bool = (not eng2.enemies[0]["statuses"].is_empty()) or eng2.enemies[0]["hp"] <= 0
 	_check("Onde Corrosive applique un statut", applied)
 
+func _test_progression() -> void:
+	print("- Progression (niveaux)")
+	GameState.new_game()
+	var hp0 := int(GameState.player["stats"]["hp"])
+	_check("niveau initial 1", int(GameState.player["level"]) == 1)
+	_check("Onde Corrosive pas encore connue", not GameState.player["skills"].has("skl_onde_corrosive"))
+	GameState.grant_xp(GameState.xp_to_next_level())   # juste assez pour le niveau 2
+	_check("monte au niveau 2", int(GameState.player["level"]) == 2)
+	_check("PV max augmenté selon la croissance", int(GameState.player["stats"]["hp"]) == hp0 + 8)
+	_check("déblocage d'Onde Corrosive au niveau 2", GameState.player["skills"].has("skl_onde_corrosive"))
+	# XP massive : plusieurs niveaux d'un coup, reste cohérent.
+	GameState.new_game()
+	GameState.grant_xp(1000)
+	_check("XP massive fait gagner plusieurs niveaux", int(GameState.player["level"]) >= 3)
+	_check("XP restante sous le prochain seuil", int(GameState.player["xp"]) < GameState.xp_to_next_level())
+
 func _test_loot() -> void:
 	print("- Loot")
 	var eng := CombatEngine.new(RNG.new(7))
@@ -110,7 +127,7 @@ func _test_save_roundtrip() -> void:
 	print("- Sauvegarde")
 	GameState.new_game()
 	GameState.add_item("itm_eclat_quartz", 3)
-	GameState.grant_xp(50)
+	GameState.player["xp"] = 50      # valeurs posées directement (on teste le round-trip, pas le level-up)
 	GameState.player["level"] = 4
 	_check("sauvegarde écrite", SaveManager.save_game())
 	GameState.new_game()  # on réinitialise pour vérifier le rechargement

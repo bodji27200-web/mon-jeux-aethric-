@@ -36,8 +36,32 @@ func _new_player(class_id: String) -> Dictionary:
 func add_item(item_id: String, count: int = 1) -> void:
 	inventory[item_id] = int(inventory.get(item_id, 0)) + count
 
+## XP nécessaire pour passer au niveau suivant (courbe linéaire originale du projet).
+func xp_to_next_level() -> int:
+	return 25 * int(player.get("level", 1))
+
 func grant_xp(amount: int) -> void:
 	player["xp"] = int(player.get("xp", 0)) + amount
+	# Montée de niveau (possiblement plusieurs d'un coup).
+	while int(player["xp"]) >= xp_to_next_level():
+		player["xp"] = int(player["xp"]) - xp_to_next_level()
+		_level_up()
+
+func _level_up() -> void:
+	player["level"] = int(player.get("level", 1)) + 1
+	var cls := DataRegistry.get_class_def(player.get("class_id", ""))
+	# Croissance des stats (data-driven, définie par la classe).
+	var growth: Dictionary = cls.get("growth_per_level", {})
+	for k in growth:
+		player["stats"][k] = int(player["stats"].get(k, 0)) + int(growth[k])
+	# Déblocage de compétences au palier atteint.
+	for u in cls.get("skill_unlocks", []):
+		if int(u.get("level", 0)) == int(player["level"]):
+			var sid: String = u.get("skill_id", "")
+			if sid != "" and not player["skills"].has(sid):
+				player["skills"].append(sid)
+	# On regagne pleine vie/énergie en montant de niveau.
+	full_restore()
 
 ## Restaure le héros au max (après un combat gagné / repos).
 func full_restore() -> void:

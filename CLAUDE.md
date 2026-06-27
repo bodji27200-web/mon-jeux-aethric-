@@ -91,3 +91,7 @@ victoire → loot → sauvegarde → retour dans la zone → export Web jouable 
 | 2026-06-27 | Lot 1 : boucle minimale jouable (Godot 4.7, autoloads data-driven, combat tour par tour, loot, sauvegarde versionnée). 18 tests headless OK + export Web OK. | Première tranche complète de bout en bout. |
 | 2026-06-27 | Données concrètes en JSON (data/) plutôt qu'en .tres pour le lot 1. | Simplicité, chargement headless, pas de dépendance à l'éditeur. |
 | 2026-06-27 | Lot 2 : CI GitHub Actions exporte le Web et déploie sur GitHub Pages à chaque push sur main. | Lien jouable persistant et à jour automatiquement. |
+| 2026-06-27 | Lot 3 : combat de groupe + ordre des tours par vitesse. 22 tests OK. | Profondeur du combat. |
+| 2026-06-27 | Lot 4 : effets de statut data-driven (DoT, debuffs). 26 tests OK. | Variété tactique. |
+| 2026-06-27 | Lot 5 : progression (niveaux, courbe XP, déblocage de compétences). 33 tests OK. | Évolution du personnage. |
+| 2026-06-27 | Pages bloqué : dépôt privé en plan gratuit. CI build/test/export OK mais déploiement Pages échoue. | Décision utilisateur requise (dépôt public ou plan payant). |
