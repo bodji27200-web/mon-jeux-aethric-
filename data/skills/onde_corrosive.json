@@ -1,0 +1,12 @@
+{
+  "id": "skl_onde_corrosive",
+  "display_name": "Onde Corrosive",
+  "description": "Asperge la cible d'une substance rongeante : dégâts légers puis corrosion sur la durée.",
+  "resource_cost": { "type": "mana", "amount": 8 },
+  "target": "enemy",
+  "effect_type": "damage",
+  "power": 6,
+  "status_effects": [
+    { "id": "Corrosion", "type": "dot", "duration": 3, "magnitude": 4 }
+  ]
+}

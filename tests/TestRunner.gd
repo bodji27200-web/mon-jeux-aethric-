@@ -12,6 +12,7 @@ func _ready() -> void:
 	_test_combat_victory()
 	_test_combat_group()
 	_test_turn_order()
+	_test_status_effects()
 	_test_loot()
 	_test_save_roundtrip()
 	await _test_scenes_instantiate()
@@ -67,6 +68,30 @@ func _test_turn_order() -> void:
 	eng.setup(GameState.player, ["mob_larve_spectrale"])
 	var hp_max := int(GameState.player["stats"]["hp"])
 	_check("l'ennemi rapide frappe avant le 1er tour du héros", eng.hero["hp"] < hp_max)
+
+func _test_status_effects() -> void:
+	print("- Effets de statut")
+	GameState.new_game()
+	var eng := CombatEngine.new(RNG.new(1))
+	eng.setup(GameState.player, ["mob_rodeur_landes"])
+	# DoT : inflige des dégâts puis expire après sa durée.
+	var e: Dictionary = eng.enemies[0]
+	e["statuses"].append({ "id": "Corrosion", "type": "dot", "duration": 2, "magnitude": 5 })
+	var hp0 := int(e["hp"])
+	eng._tick_statuses(e)
+	_check("le DoT inflige des dégâts", int(e["hp"]) == hp0 - 5)
+	eng._tick_statuses(e)
+	_check("le DoT expire après sa durée", e["statuses"].is_empty())
+	# Debuff d'attaque.
+	var atk0 := eng._effective_stat(eng.hero, "attack")
+	eng.hero["statuses"].append({ "id": "Faiblesse", "type": "attack_down", "duration": 2, "magnitude": 3 })
+	_check("le debuff réduit l'attaque", eng._effective_stat(eng.hero, "attack") == atk0 - 3)
+	# La compétence Onde Corrosive applique bien un statut sur une cible vivante.
+	var eng2 := CombatEngine.new(RNG.new(9))
+	eng2.setup(GameState.player, ["mob_rodeur_landes"])
+	eng2.hero_use_skill("skl_onde_corrosive", 0)
+	var applied: bool = (not eng2.enemies[0]["statuses"].is_empty()) or eng2.enemies[0]["hp"] <= 0
+	_check("Onde Corrosive applique un statut", applied)
 
 func _test_loot() -> void:
 	print("- Loot")

@@ -29,6 +29,7 @@ func setup(hero_state: Dictionary, monster_ids: Array) -> void:
 		"defense": int(hero_state["stats"].get("defense", 0)),
 		"speed": int(hero_state["stats"].get("speed", 0)),
 		"skills": hero_state.get("skills", []),
+		"statuses": [],
 	}
 	enemies.clear()
 	for mid in monster_ids:
@@ -46,6 +47,7 @@ func setup(hero_state: Dictionary, monster_ids: Array) -> void:
 			"speed": int(s.get("speed", 0)),
 			"xp_reward": int(m.get("xp_reward", 0)),
 			"loot_table_id": m.get("loot_table_id", ""),
+			"statuses": [],
 		})
 	_begin_round()
 
@@ -78,11 +80,15 @@ func _advance_until_hero() -> void:
 		var idx := int(_order[_order_pos])
 		if idx == HERO:
 			if hero["hp"] > 0:
-				return  # on attend l'action du joueur
+				_tick_statuses(hero)        # altérations en début de tour du héros
+				if hero["hp"] > 0:
+					return                  # on attend l'action du joueur
 			_order_pos += 1
 			continue
 		if idx < enemies.size() and enemies[idx]["hp"] > 0:
-			_enemy_act(idx)
+			_tick_statuses(enemies[idx])    # altérations en début de tour de l'ennemi
+			if enemies[idx]["hp"] > 0:
+				_enemy_act(idx)
 		_order_pos += 1
 	# Manche terminée : on recommence si le combat continue.
 	if is_ongoing():
@@ -113,13 +119,15 @@ func hero_use_skill(skill_id: String, target_index: int) -> bool:
 	if target < 0:
 		return false
 	hero["mana"] -= cost
-	if skill.get("effect_type", "") == "damage":
+	if int(skill.get("power", 0)) > 0 and skill.get("effect_type", "") == "damage":
 		var dmg := compute_damage(int(skill.get("power", 0)), hero, enemies[target])
 		enemies[target]["hp"] = max(0, enemies[target]["hp"] - dmg)
 		log_lines.append("%s sur %s : %d dégâts." % [
 			skill.get("display_name", skill_id), enemies[target]["name"], dmg])
-		if enemies[target]["hp"] <= 0:
-			log_lines.append("%s est vaincu !" % enemies[target]["name"])
+	if enemies[target]["hp"] > 0:
+		_apply_status_effects(skill, enemies[target])
+	if enemies[target]["hp"] <= 0:
+		log_lines.append("%s est vaincu !" % enemies[target]["name"])
 	_order_pos += 1
 	_advance_until_hero()
 	return true
@@ -159,11 +167,46 @@ func total_xp_reward() -> int:
 # --- Dégâts & loot ----------------------------------------------------------
 
 ## Formule de dégâts du projet : max(1, power + attaque - défense) avec légère variance.
+## L'attaque/défense effectives tiennent compte des altérations (buffs/debuffs) actives.
 func compute_damage(power: int, attacker: Dictionary, defender: Dictionary) -> int:
-	var raw := power + int(attacker.get("attack", 0)) - int(defender.get("defense", 0))
+	var raw := power + _effective_stat(attacker, "attack") - _effective_stat(defender, "defense")
 	raw = max(1, raw)
 	var variance := rng.randi_range(-1, 1)
 	return max(1, raw + variance)
+
+## Valeur d'une stat après application des modificateurs de statut (atk_down / def_down).
+func _effective_stat(actor: Dictionary, stat: String) -> int:
+	var value := int(actor.get(stat, 0))
+	for s in actor.get("statuses", []):
+		if s.get("type", "") == stat + "_down":
+			value -= int(s.get("magnitude", 0))
+	return max(0, value)
+
+## Applique les effets de statut d'une compétence à la cible.
+func _apply_status_effects(skill: Dictionary, target: Dictionary) -> void:
+	for eff in skill.get("status_effects", []):
+		target["statuses"].append({
+			"id": eff.get("id", "effet"),
+			"type": eff.get("type", "dot"),
+			"duration": int(eff.get("duration", 1)),
+			"magnitude": int(eff.get("magnitude", 0)),
+		})
+		log_lines.append("%s subit : %s." % [target["name"], eff.get("id", "effet")])
+
+## Résout les altérations en début de tour de l'acteur (DoT) puis décrémente leur durée.
+func _tick_statuses(actor: Dictionary) -> void:
+	var remaining: Array = []
+	for s in actor.get("statuses", []):
+		if s.get("type", "") == "dot":
+			var dmg := int(s.get("magnitude", 0))
+			actor["hp"] = max(0, int(actor["hp"]) - dmg)
+			log_lines.append("%s subit %d dégâts (%s)." % [actor["name"], dmg, s.get("id", "dot")])
+		s["duration"] = int(s.get("duration", 1)) - 1
+		if int(s["duration"]) > 0 and actor["hp"] > 0:
+			remaining.append(s)
+	actor["statuses"] = remaining
+	if actor["hp"] <= 0:
+		log_lines.append("%s succombe à ses blessures." % actor["name"])
 
 ## Butin cumulé de tous les ennemis vaincus : [{ "item_id", "count" }].
 func roll_loot() -> Array:

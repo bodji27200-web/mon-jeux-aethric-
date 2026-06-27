@@ -18,8 +18,8 @@ Légende : ✅ fait · 🚧 en cours · ⬜ à faire
   publie sur GitHub Pages à chaque push sur main. Lien jouable persistant.
 - ✅ **Lot 3 — Profondeur du combat.** Plusieurs ennemis (groupes 1-2), file de tours basée sur la
   vitesse (initiative par manche), sélection de cible, coût de ressource. 22 tests OK.
-- ⬜ **Lot 4 — Effets de statut.** Buffs/debuffs, poison/brûlure/etc. (effets génériques data-driven),
-  durée, résolution en fin de tour.
+- ✅ **Lot 4 — Effets de statut.** Altérations data-driven (DoT, debuff d'attaque/défense), durée,
+  résolution en début de tour de l'acteur. Compétence Onde Corrosive. 26 tests OK.
 - ⬜ **Lot 5 — Classes & progression.** Classes jouables data-driven, montée de niveau, courbe d'XP,
   déblocage de compétences par palier.
 - ⬜ **Lot 6 — Stats & formules.** Stats dérivées (attaque/défense/crit/esquive), formule de dégâts
