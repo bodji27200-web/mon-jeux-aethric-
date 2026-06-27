@@ -26,8 +26,8 @@ Légende : ✅ fait · 🚧 en cours · ⬜ à faire
   d'attaque centralisée (`resolve_attack`), RNG déterministe testé. 38 tests OK.
 - ✅ **Lot 7 — Inventaire & équipement.** 3 emplacements (arme/armure/bijou), modificateurs de stats,
   stats effectives, UI Sac mobile (équiper), consommables en combat (potion). 45 tests OK.
-- ⬜ **Lot 8 — Sauvegarde robuste & migrations.** Plusieurs slots, migration de version, gestion des
-  saves corrompues, sauvegarde auto.
+- ✅ **Lot 8 — Sauvegarde robuste & migrations.** Migration versionnée (v1→v2), copie de secours
+  `.bak` + repli automatique, gestion des saves corrompues sans crash. 49 tests OK.
 
 ## Phase B — Contenu & monde (lots 9–18)
 

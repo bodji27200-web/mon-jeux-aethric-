@@ -16,6 +16,7 @@ func _ready() -> void:
 	_test_crit_dodge()
 	_test_progression()
 	_test_equipment_and_items()
+	_test_save_robustness()
 	_test_loot()
 	_test_save_roundtrip()
 	await _test_scenes_instantiate()
@@ -154,6 +155,46 @@ func _test_equipment_and_items() -> void:
 	_check("le héros démarre blessé (10 PV)", hp_before == 10)
 	eng.hero_use_item("itm_potion_seve")
 	_check("la potion soigne le héros", int(eng.hero["hp"]) > hp_before)
+
+func _write_text(path: String, text: String) -> void:
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(text)
+	f.close()
+
+func _test_save_robustness() -> void:
+	print("- Sauvegarde robuste")
+	# 1) Migration v1 -> v2 : une vieille save sans 'equipment' doit être complétée.
+	SaveManager.delete_save()
+	var v1 := {
+		"save_version": 1,
+		"state": {
+			"player": {
+				"class_id": "cls_sentinelle", "level": 1, "xp": 0,
+				"stats": { "hp": 60, "mana": 20, "attack": 12, "defense": 8, "speed": 7 },
+				"current_hp": 60, "current_mana": 20, "skills": ["skl_frappe"]
+			},
+			"inventory": {}, "current_zone": "zone_clairiere"
+		}
+	}
+	_write_text(SaveManager.SAVE_PATH, JSON.stringify(v1))
+	_check("chargement d'une save v1", SaveManager.load_game())
+	_check("migration v1->v2 ajoute l'équipement", GameState.player.has("equipment"))
+
+	# 2) Repli sur la copie de secours si la save principale est corrompue.
+	SaveManager.delete_save()
+	GameState.new_game()
+	GameState.grant_xp(10)
+	_write_text(SaveManager.BACKUP_PATH, JSON.stringify({
+		"save_version": 2, "state": GameState.to_dict() }))
+	_write_text(SaveManager.SAVE_PATH, "{ ceci n'est pas du JSON valide")
+	GameState.new_game()
+	_check("repli sur la copie de secours", SaveManager.load_game())
+
+	# 3) Deux fichiers corrompus -> échec propre (pas de crash).
+	_write_text(SaveManager.SAVE_PATH, "@@@ corrompu")
+	_write_text(SaveManager.BACKUP_PATH, "@@@ corrompu aussi")
+	_check("double corruption -> load échoue proprement", not SaveManager.load_game())
+	SaveManager.delete_save()
 
 func _test_loot() -> void:
 	print("- Loot")

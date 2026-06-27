@@ -99,3 +99,4 @@ victoire → loot → sauvegarde → retour dans la zone → export Web jouable 
 | 2026-06-27 | Habillage & pipeline d'assets : chemins d'images data-driven (background/sprite) avec fallback, fond de zone, sprites, combat animé (dégâts flottants, flash). Correction du bug tactile (mouse_filter). 33 tests OK. | Intégrer les images originales de l'utilisateur + rendre le jeu vivant. |
 | 2026-06-27 | Lot 6 : coup critique + esquive, résolution d'attaque centralisée, RNG déterministe. 38 tests OK. | Profondeur tactique et formules testables. |
 | 2026-06-27 | Lot 7 : inventaire & équipement (3 emplacements, stats effectives, UI Sac, consommables en combat). 45 tests OK. | Personnalisation du personnage. |
+| 2026-06-27 | Lot 8 : sauvegarde robuste (migration v1→v2, copie de secours .bak + repli, saves corrompues gérées). 49 tests OK. | Fiabilité de la progression. |
